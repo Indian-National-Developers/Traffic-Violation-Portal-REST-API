@@ -1,0 +1,201 @@
+[
+
+    {
+        "videoID": 1,
+        "videoURL": "https://www.youtube.com/watch?v=qzQWsH2zlD4",
+        "thumbURL": "https://www.thumb.youtube.com/qzQWsH2zlD4",
+        "dataTime": "2014-10-30 06:25 AM",
+        "uploaderName": "Bhagat Singh",
+        "moderatorName": "Chandrasekar Azad",
+        "moderationScore": 2,
+        "isAnonymous": false,
+
+        "latitude": 14.1223452,
+        "longitude": 32.4324235,
+        "address": {
+            "id": 10,
+            "name": "KalaignarArch",
+            "town": {
+                "id": 20,
+                "name": "Saidapet"
+            },
+            "city": {
+                "id": 12,
+                "name": "Chennai"
+            },
+            "state": {
+                "id": 3,
+                "name": "TamilNadu"
+            }
+        },
+        "violations": [
+            {
+                "issueType": "ruleViolation",
+                "videoID": 1,
+                "vehicleRegNo": "TN 009 FK",
+                "violationType": "1",
+                "vehicleType": "Bike",
+                "timeSlice": 10,
+                "analyzerName": "Subash Chandra Bose",
+                "moderatorName": "Swami Vivekananda",
+                "moderationScore": 2,
+                "isAnonymous": false
+            },
+            {
+                "issueType": "ruleViolation",
+                "videoID": 1,
+                "vehicleRegNo": "TN 540 FP",
+                "violationType": "3",
+                "vehicleType": "Bike",
+                "timeSlice": 18,
+                "analyzerName": "Subash Chandra Bose",
+                "moderatorName": "Swami Vivekananda",
+                "moderationScore": 2,
+                "isAnonymous": false
+            },
+            {
+                "issueType": "infraViolation",
+                "videoID": 1,
+                "violationType": "1",
+                "timeSlice": 10,
+                "analyzerName": "Subash Chandra Bose",
+                "moderatorName": "Swami Vivekananda",
+                "moderationScore": 2,
+                "isAnonymous": false
+            }
+        ]
+    },
+
+    {
+        "videoID": 2,
+        "videoURL": "https://www.youtube.com/watch?v=qzQWsH2zlD4",
+        "thumbURL": "https://www.thumb.youtube.com/qzQWsH2zlD4",
+        "dataTime": "2014-10-30 06:25 AM",
+        "uploaderName": "Bhagat Singh",
+        "moderatorName": "Chandrasekar Azad",
+        "moderationScore": 2,
+        "isAnonymous": false,
+
+        "latitude": 14.1223452,
+        "longitude": 32.4324235,
+        "address": {
+            "id": 10,
+            "name": "KalaignarArch",
+            "town": {
+                "id": 20,
+                "name": "Saidapet"
+            },
+            "city": {
+                "id": 12,
+                "name": "Chennai"
+            },
+            "state": {
+                "id": 3,
+                "name": "TamilNadu"
+            }
+        },
+        "violations": [
+            {
+                "issueType": "ruleViolation",
+                "videoID": 2,
+                "vehicleRegNo": "TN 009 FK",
+                "violationType": "1",
+                "vehicleType": "Bike",
+                "timeSlice": 10,
+                "analyzerName": "Subash Chandra Bose",
+                "moderatorName": "Swami Vivekananda",
+                "moderationScore": 2,
+                "isAnonymous": false
+            },
+            {
+                "issueType": "ruleViolation",
+                "videoID": 2,
+                "vehicleRegNo": "TN 540 FP",
+                "violationType": "3",
+                "vehicleType": "Bike",
+                "timeSlice": 18,
+                "analyzerName": "Subash Chandra Bose",
+                "moderatorName": "Swami Vivekananda",
+                "moderationScore": 2,
+                "isAnonymous": false
+            },
+            {
+                "issueType": "infraViolation",
+                "videoID": 2,
+                "violationType": "1",
+                "timeSlice": 10,
+                "analyzerName": "Subash Chandra Bose",
+                "moderatorName": "Swami Vivekananda",
+                "moderationScore": 2,
+                "isAnonymous": false
+            }
+        ]
+    },
+
+    {
+        "videoID": 3,
+        "videoURL": "https://www.youtube.com/watch?v=qzQWsH2zlD4",
+        "thumbURL": "https://www.thumb.youtube.com/qzQWsH2zlD4",
+        "dataTime": "2014-10-30 06:25 AM",
+        "uploaderName": "Bhagat Singh",
+        "moderatorName": "Chandrasekar Azad",
+        "moderationScore": 2,
+        "isAnonymous": false,
+
+        "latitude": 14.1223452,
+        "longitude": 32.4324235,
+        "address": {
+            "id": 10,
+            "name": "KalaignarArch",
+            "town": {
+                "id": 20,
+                "name": "Saidapet"
+            },
+            "city": {
+                "id": 12,
+                "name": "Chennai"
+            },
+            "state": {
+                "id": 3,
+                "name": "TamilNadu"
+            }
+        },
+        "violations": [
+            {
+                "issueType": "ruleViolation",
+                "videoID": 3,
+                "vehicleRegNo": "TN 009 FK",
+                "violationType": "1",
+                "vehicleType": "Bike",
+                "timeSlice": 10,
+                "analyzerName": "Subash Chandra Bose",
+                "moderatorName": "Swami Vivekananda",
+                "moderationScore": 2,
+                "isAnonymous": false
+            },
+            {
+                "issueType": "ruleViolation",
+                "videoID": 3,
+                "vehicleRegNo": "TN 540 FP",
+                "violationType": "3",
+                "vehicleType": "Bike",
+                "timeSlice": 18,
+                "analyzerName": "Subash Chandra Bose",
+                "moderatorName": "Swami Vivekananda",
+                "moderationScore": 2,
+                "isAnonymous": false
+            },
+            {
+                "issueType": "infraViolation",
+                "videoID": 3,
+                "violationType": "1",
+                "timeSlice": 10,
+                "analyzerName": "Subash Chandra Bose",
+                "moderatorName": "Swami Vivekananda",
+                "moderationScore": 2,
+                "isAnonymous": false
+            }
+        ]
+    }
+
+]
