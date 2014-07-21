@@ -32,12 +32,13 @@ return array(
     'slim'  =>  array(
         'version'                   =>  '1.0',
         'debug'                     =>  true,
-        'mode'                      =>  'production'
+        'mode'                      =>  'development'
     ),
     'db'    =>  array(
         'host'                      =>  'localhost',
-        'name'                      =>  'TrafficPortal',
-        'password'                  =>  'password',
+        'userName'                  =>  'root',
+        'password'                  =>  'root',
+        'dbName'                    =>  'grayface_traffic',
     )
 );
 

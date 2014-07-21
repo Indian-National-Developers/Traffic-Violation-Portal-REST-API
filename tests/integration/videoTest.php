@@ -37,17 +37,44 @@ class videoTest extends Slim_Framework_TestCase {
     /**
      * Test the Number of Videos in the regular GET request
      */
-    public function testVideoCount() {
+    public function testVideoCountInPage1() {
         $this->get('/video/');
         $this->assertEquals(200, $this->response->status());
 
         $rawResponse                =   $this->response->body();
         $jsonResponse               =   json_decode($rawResponse);
-        $firstVidJSON               =   $jsonResponse->data[0];
-        $videoID                    =   $firstVidJSON->videoID;
 
-        $this->assertSame(3, count($jsonResponse->data));
-        //fwrite(STDERR, print_r($firstVidJSON, TRUE));
+        //fwrite(STDERR, print_r($jsonResponse, TRUE));
+        $this->assertSame(20, count($jsonResponse->data));
+    }
+
+    /**
+     * Test the Number of Videos in Total
+     */
+    public function testVideoCountInTotal() {
+        $cursor                     =   '/video/';
+        $totalVideoCount            =   0;
+
+        do {
+            $this->get($cursor);
+            $this->assertEquals(200, $this->response->status());
+
+            $rawResponse            =   $this->response->body();
+            $jsonResponse           =   json_decode($rawResponse);
+            $totalVideoCount        +=  count($jsonResponse->data);
+            $cursor                 =   $jsonResponse->paging->next;
+        } while ($cursor !== null);
+
+        $this->assertSame(61, $totalVideoCount);
+    }
+
+
+    public function traversePagesOfVideos() {
+        $this->get('/video/');
+        $this->assertEquals(200, $this->response->status());
+
+        $rawResponse                =   $this->response->body();
+        $jsonResponse               =   json_decode($rawResponse);
     }
 
     /**
@@ -61,15 +88,15 @@ class videoTest extends Slim_Framework_TestCase {
         $jsonResponse               =   json_decode($rawResponse);
         $vidJSON                    =   $jsonResponse->data[0];
         $videoID                    =   $vidJSON->videoID;
-        $this->assertSame(1, $videoID);
+        $this->assertSame('51', $videoID);
 
         $vidJSON                    =   $jsonResponse->data[1];
         $videoID                    =   $vidJSON->videoID;
-        $this->assertSame(2, $videoID);
+        $this->assertSame('50', $videoID);
 
         $vidJSON                    =   $jsonResponse->data[2];
         $videoID                    =   $vidJSON->videoID;
-        $this->assertSame(3, $videoID);
+        $this->assertSame('52', $videoID);
     }
 
 }

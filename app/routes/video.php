@@ -29,15 +29,46 @@
  *
  */
 
+// loading DB Configuration
+
 /**
  * GET Videos; returns all the videos
  */
-$app->get('/video/', function () {
-    $videoRawString             =   file_get_contents("app/routes/videoDataSet.json");
-    $videoJSON                  =   json_decode($videoRawString);
-    $responseData               =   array("data" => $videoJSON,
-                                          "paging" => array("first" => "/video/?page=1", "last" => "/video/?page=1"));
-    echo                            json_encode($responseData);
+$app->get('/video/', function () use ($app) {
+    $config                         =   require 'app/config_dev.php';
+    $dbConfig                       =   $config['db'];
+
+    $db                             =   mysql_connect($dbConfig['host'],
+                                                      $dbConfig['userName'],
+                                                      $dbConfig['password']);
+    mysql_select_db($dbConfig['dbName'], $db) or die('could not select db');
+    $page                           =   $app->request()->params('page');
+    if ($page == null)                  $page = 1;
+    $page                           =   (int)$page;
+
+    $offsetCount                    =   ($page - 1) * 20;
+    $query                          =   "SELECT * FROM video ORDER BY time DESC LIMIT 20 OFFSET ". $offsetCount;
+    $result                         =   mysql_query($query) or die('Could not query');
+    $videoJson                      =   array();
+
+    if(mysql_num_rows($result)){
+        while($row = mysql_fetch_array($result, MYSQL_ASSOC)){
+            $videoJson[]            =   $row;
+        }
+    }
+
+    $pagingJson                     =   array();
+    $pagingJson['first']            =   "/video/?page=1";
+    if ($page > 1) $pagingJson['prev']= "/video/?page=" . ($page - 1);
+    if ($page < 4) $pagingJson['next']= "/video/?page=" . ($page + 1);
+    $pagingJson['last']             =   "/video/?page=4";
+
+    $responseData                   =   array("data" => $videoJson,
+                                              "paging" => $pagingJson);
+
+    echo json_encode($responseData);
+
+    mysql_close($db);
 });
 
 ?>
