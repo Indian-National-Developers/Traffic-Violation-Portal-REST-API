@@ -38,13 +38,8 @@ $app->get('/video/', function () use ($app) {
     $config                         =   require 'app/config_dev.php';
     $dbConfig                       =   $config['db'];
 
-    $db                             =   mysql_connect($dbConfig['host'],
-                                                      $dbConfig['userName'],
-                                                      $dbConfig['password']);
-    mysql_select_db($dbConfig['dbName'], $db) or die('could not select db');
-    $page                           =   $app->request()->params('page');
-    if ($page == null)                  $page = 1;
-    $page                           =   (int)$page;
+    $db                             =   openDB($dbConfig);
+    $page                           =   findPageParameter($app->request()->params());
 
     $offsetCount                    =   ($page - 1) * 20;
     $query                          =   "SELECT * FROM video ORDER BY time DESC LIMIT 20 OFFSET ". $offsetCount;
@@ -70,5 +65,27 @@ $app->get('/video/', function () use ($app) {
 
     mysql_close($db);
 });
+
+function openDB($dbConfig) {
+    $db                             =   mysql_connect($dbConfig['host'],
+                                                      $dbConfig['userName'],
+                                                      $dbConfig['password']);
+    mysql_select_db($dbConfig['dbName'], $db) or die('could not select db');
+    return                              $db;
+}
+
+function findPageParameter($params) {
+    // if page param is not passed, return first page
+    if(!array_key_exists('page',$params))
+        return                          1;
+
+    $page                           =   $params['page'];
+
+    // if page value is not mentioned, return first page
+    if ($page == null)
+        return                          1;
+
+    return                              (int)$page;
+}
 
 ?>
