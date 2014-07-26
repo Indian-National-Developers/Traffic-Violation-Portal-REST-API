@@ -32,7 +32,7 @@ return array(
     'slim'  =>  array(
         'version'                   =>  '1.0',
         'debug'                     =>  true,
-        'mode'                      =>  'development'
+        'mode'                      =>  'production'
     ),
     'db'    =>  array(
         'host'                      =>  'localhost',
