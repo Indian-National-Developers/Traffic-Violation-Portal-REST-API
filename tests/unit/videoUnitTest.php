@@ -27,9 +27,133 @@
  * @author          saiy2k <http://saiy2k.blogspot.in>
  * @link            https://github.com/GethuGames/Traffic-Violation-Portal-REST-API
  *
+ * TODO: Test cases for `openDB()` and `createSelectQuery()`
+ *
  */
 
 class videoUnitTest extends Slim_Framework_TestCase {
+
+    /**
+     * Negative Unit Test Cases for findParameter
+     */
+    public function test_findParameter_negative() {
+
+        // with null parameter
+        $result                     =   findParameter(null, 'town');
+        $this->assertSame(null, $result);
+
+        // with empty array
+        $result                     =   findParameter(array(), 'town');
+        $this->assertSame(null, $result);
+
+        // without proper key
+        $result                     =   findParameter(array('randomKey' => 'randomValue'), 'town');
+        $this->assertSame(null, $result);
+
+        // with empty object
+        $result                     =   findParameter(new stdClass(), 'state');
+        $this->assertSame(null, $result);
+
+        // with non string as value
+        $result                     =   findParameter(array('city' => 10), 'city');
+        $this->assertSame(null, $result);
+
+        // with object as value
+        $result                     =   findParameter(array('city' => new stdClass()), 'city');
+        $this->assertSame(null, $result);
+
+        // with array as value
+        $result                     =   findParameter(array('state' => array()), 'state');
+        $this->assertSame(null, $result);
+
+        // with wrong date key
+        $result                     =   findParameter(array('city' => 'chennai'), 'state');
+        $this->assertSame(null, $result); 
+
+        // with a non date string as value
+        $result                     =   findParameter(array('fromDate' => 'this is not a date'), 'fromDate');
+        $this->assertSame(null, $result);
+
+        // with a invalid date
+        $result                     =   findParameter(array('fromDate' => '2015-30-30 99:12:99'), 'fromDate');
+        $this->assertSame(null, $result);
+
+        // with just time and no date
+        $result                     =   findParameter(array('fromDate' => '10:12:20'), 'fromDate');
+        $this->assertSame(null, $result);
+
+        // with wrong date key
+        $result                     =   findParameter(array('fromDate' => '10:12:20'), 'toDate');
+        $this->assertSame(null, $result);
+
+        // Page parameter as string
+        $result                     =   findParameter(array("page" => 'bulb ah'), 'page');
+        $this->assertSame(1, $result);
+
+        // Page parameter as array
+        $result                     =   findParameter(array("page" => array()), 'page');
+        $this->assertSame(1, $result);
+
+        // page parameter as empty object
+        $result                     =   findParameter(new stdClass(), 'page');
+        $this->assertSame(1, $result);
+
+        // proper parameter array with missing key
+        $paramArray                 =   array('page' => 3, 'town' => 'saidapet', 'city' => 'chennai');
+        $result                     =   findParameter($paramArray, 'fromDate');
+        $this->assertSame(null, $result);
+
+    }
+
+    /**
+     * Positive Unit Test Cases for findParameter
+     */
+    public function test_findParameter_Positive() {
+
+        // regular city parameter
+        $result                     =   findParameter(array('city' => 'chennai'), 'city');
+        $this->assertSame('chennai', $result);
+
+        // regular city parameter with multi values
+        $result                     =   findParameter(array('state' => 'tamilnadu,delhi'), 'state');
+        $this->assertSame('tamilnadu,delhi', $result);
+
+        // regular date time in format YYYY-mm-dd hh:mm:ss
+        $result                     =   findParameter(array('fromDate' => '2014-05-01 10:30:24'), 'fromDate');
+        $this->assertSame('2014-05-01 10:30:24', $result);
+
+        // regular date time in format YYYY-mm-dd hh:mm:ss, where hh > 12
+        $result                     =   findParameter(array('fromDate' => '2010-05-01 23:30:24'), 'fromDate');
+        $this->assertSame('2010-05-01 23:30:24', $result);
+
+        // with just date, not time
+        $result                     =   findParameter(array('fromDate' => '2014-05-05'), 'fromDate');
+        $this->assertSame('2014-05-05', $result);
+
+        // with different key date
+        $result                     =   findParameter(array('toDate' => '2014-05-05'), 'toDate');
+        $this->assertSame('2014-05-05', $result);
+
+        // with Page 2
+        $result                     =   findPageParameter(array('page' => 2));
+        $this->assertSame(2, $result);
+
+        // with random page
+        $randomNumber               =   rand();
+        $result                     =   findPageParameter(array('page' => $randomNumber));
+        $this->assertSame($randomNumber, $result);
+
+        // proper parameter array
+        $paramArray                 =   array('page' => 3, 'town' => 'saidapet', 'city' => 'chennai', 'fromDate' => '2014-01-01 00:00:00');
+        $result                     =   findParameter($paramArray, 'page');
+        $this->assertSame(3, $result);
+        $result                     =   findParameter($paramArray, 'town');
+        $this->assertSame('saidapet', $result);
+        $result                     =   findParameter($paramArray, 'fromDate');
+        $this->assertSame('2014-01-01 00:00:00', $result);
+
+    }
+
 
     /**
      * Negative Unit Test Cases for findRegularParameterForKey
@@ -149,6 +273,7 @@ class videoUnitTest extends Slim_Framework_TestCase {
         // with different key date
         $result                     =   findDateParameterForKey(array('toDate' => '2014-05-05'), 'toDate');
         $this->assertSame('2014-05-05', $result);
+
     }
 
     /**

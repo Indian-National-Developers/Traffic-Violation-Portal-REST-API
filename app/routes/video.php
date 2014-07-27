@@ -143,6 +143,10 @@ function openDB($dbConfig) {
     return                              $success;
 }
 
+function createSelectQuery() {
+
+}
+
 /**
  * finds the specified parameter in the given parameter array
  * and returns it
@@ -154,7 +158,7 @@ function openDB($dbConfig) {
  */
 function findParameter($params, $paramName) {
 
-    if ($paramName == 'fromData' || $paramName == 'toDate') {
+    if ($paramName == 'fromDate' || $paramName == 'toDate') {
         return                          findDateParameterForKey($params, $paramName);
     } else if ($paramName == 'town' || $paramName == 'city' || $paramName == 'state' || $paramName == 'uploader') {
         return                          findRegularParameterForKey($params, $paramName);
