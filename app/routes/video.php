@@ -56,43 +56,7 @@ $app->get('/video/', function () use ($app) {
     $userFilter                     =   findParameter($paramsArray, 'uploader');
     $page                           =   findParameter($paramsArray, 'page');
 
-    /*
-    $query                          =   "SELECT * FROM video ";
-    if ($fromDateFilter || $toDateFilter || $townFilter || $cityFilter || $stateFilter || $userFilter) {
-        $query                      =   $query . 'WHERE ';
-        $conditionAdded             =   false;
-        if ($fromDateFilter) {
-            $query                  =   $query . 'time >= ' . $fromDateFilter . ' ';
-            $conditionAdded         =   true;
-        }
-        if ($toDateFilter) {
-            if ($conditionAdded)        $query = $query . 'AND ';
-            $query                  =   $query . 'time <= ' . $toDateFilter . ' ';
-            $conditionAdded         =   true;
-        }
-        if ($townFilter) {
-            if ($conditionAdded)        $query = $query . 'AND ';
-            $query                  =   $query . 'town LIKE %' . $townFilter . '% ';
-            $conditionAdded         =   true;
-        }
-        if ($cityFilter) {
-            if ($conditionAdded)        $query = $query . 'AND ';
-            $query                  =   $query . 'city LIKE %' . $cityFilter . '% ';
-            $conditionAdded         =   true;
-        }
-        if ($stateFilter) {
-            if ($conditionAdded)        $query = $query . 'AND ';
-            $query                  =   $query . 'state LIKE %' . $stateFilter . '% ';
-            $conditionAdded         =   true;
-        }
-        if ($userFilter) {
-            if ($conditionAdded)        $query = $query . 'AND ';
-            $query                  =   $query . 'user LIKE %' . $userFilter . '% ';
-            $conditionAdded         =   true;
-        }
-    }
-    $offsetCount                    =   ($page - 1) * 20;
-    $query                          +=  "ORDER BY time DESC LIMIT 20 OFFSET ". $offsetCount;
+    $query                          =   createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFilter, $stateFilter, $userFilter, $page);
     $result                         =   mysql_query($query) or die('Could not query');
     $videoJson                      =   array();
 
@@ -112,7 +76,6 @@ $app->get('/video/', function () use ($app) {
                                               "paging" => $pagingJson);
 
     echo json_encode($responseData);
-     */
 
     mysql_close();
 });
@@ -143,8 +106,55 @@ function openDB($dbConfig) {
     return                              $success;
 }
 
-function createSelectQuery() {
+/**
+ * Forms a SQL query to select `video` records based on given parameters
+ * and returns it
+ *
+ * @param   date        $fromDateFilter         dateTime from when videos should be retrieved. can be set to null
+ * @param   date        $toDateFilter           dateTime upto which videos should be retrieved. can be set to null
+ * @param   string      $townFilter             name of the town, where the video is taken. can be set to null
+ * @param   string      $cityFilter             name of the city, where the video is taken. can be set to null
+ * @param   string      $stateFilter            name of the state, where the video is taken. can be set to null
+ * @param   string      $userFilter             name of the user who uploaded the Video. can be set to null
+ * @param   int         $page                   index of the page to retrieve the videos from
+ *
+ * @return  string                              string representing SQL query
+ */
+function createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFilter, $stateFilter, $userFilter, $page) {
 
+    $query                          =   "SELECT * FROM video ";
+    if ($fromDateFilter || $toDateFilter || $townFilter || $cityFilter || $stateFilter || $userFilter) {
+        $query                      =   $query . 'WHERE ';
+        $conditionAdded             =   false;
+        if ($fromDateFilter) {
+            $query                  =   $query . "time >= '" . $fromDateFilter . "' ";
+            $conditionAdded         =   true;
+        }
+        if ($toDateFilter) {
+            if ($conditionAdded)        $query = $query . 'AND ';
+            $query                  =   $query . "time <= '" . $toDateFilter . "' ";
+            $conditionAdded         =   true;
+        }
+        if ($townFilter) {
+            if ($conditionAdded)        $query = $query . 'AND ';
+            $query                  =   $query . "town LIKE '%" . $townFilter . "%' ";
+            $conditionAdded         =   true;
+        }
+        if ($cityFilter) {
+            if ($conditionAdded)        $query = $query . 'AND ';
+            $query                  =   $query . "city LIKE '%" . $cityFilter . "%' ";
+            $conditionAdded         =   true;
+        }
+        if ($userFilter) {
+            if ($conditionAdded)        $query = $query . 'AND ';
+            $query                  =   $query . "uploadedBy LIKE '%" . $userFilter . "%' ";
+            $conditionAdded         =   true;
+        }
+    }
+    $offsetCount                    =   ($page - 1) * 20;
+    $query                          =   $query . "ORDER BY time DESC LIMIT 20 OFFSET ". $offsetCount;
+
+    return                              $query;
 }
 
 /**

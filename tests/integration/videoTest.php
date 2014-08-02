@@ -38,14 +38,16 @@ class videoTest extends Slim_Framework_TestCase {
      * Test the Number of Videos in the regular GET request
      */
     public function testVideoCountInPage1() {
-        //$this->get('/video/');
-        //$this->assertEquals(200, $this->response->status());
+        /*
+        $this->get('/video/');
+        $this->assertEquals(200, $this->response->status());
 
-        //$rawResponse                =   $this->response->body();
-        //$jsonResponse               =   json_decode($rawResponse);
+        $rawResponse                =   $this->response->body();
+        $jsonResponse               =   json_decode($rawResponse);
 
-        ////fwrite(STDERR, print_r($jsonResponse, TRUE));
-        //$this->assertSame(20, count($jsonResponse->data));
+        //fwrite(STDERR, print_r($jsonResponse, TRUE));
+        $this->assertSame(20, count($jsonResponse->data));
+         */
     }
 
     /**

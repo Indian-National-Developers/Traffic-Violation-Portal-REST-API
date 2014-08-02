@@ -34,6 +34,45 @@
 class videoUnitTest extends Slim_Framework_TestCase {
 
     /**
+     * Negative Unit Test Cases for createSelectQuery
+     */
+    public function test_createSelectQuery_negative() {
+    }
+
+    /**
+     * Positive Unit Test Cases for createSelectQuery
+     */
+    public function test_createSelectQuery_Positive() {
+
+        // all null parameters
+        $result                     =   createSelectQuery(null, null, null, null, null, null, 1);
+        $this->assertSame('SELECT * FROM video ORDER BY time DESC LIMIT 20 OFFSET 0', $result);
+
+        // videos from 3rd page
+        $result                     =   createSelectQuery(null, null, null, null, null, null, 3);
+        $this->assertSame('SELECT * FROM video ORDER BY time DESC LIMIT 20 OFFSET 40', $result);
+
+        // all videos from Velachery
+        $result                     =   createSelectQuery(null, null, 'Velachery', null, null, null, 1);
+        $this->assertSame("SELECT * FROM video WHERE town LIKE '%Velachery%' ORDER BY time DESC LIMIT 20 OFFSET 0", $result);
+
+        // all videos from Jan 1, 2014
+        $result                     =   createSelectQuery('2014-01-01 00:00:00', null, null, null, null, null, 1);
+        $this->assertSame("SELECT * FROM video WHERE time >= '2014-01-01 00:00:00' ORDER BY time DESC LIMIT 20 OFFSET 0", $result);
+
+        // all videos between July 1, 2013 and December 1, 2013
+        $result                     =   createSelectQuery('2013-07-01 00:00:00', '2013-12-01 00:00:00', null, null, null, null, 1);
+        $this->assertSame("SELECT * FROM video WHERE time >= '2013-07-01 00:00:00' AND time <= '2013-12-01 00:00:00' ORDER BY time DESC LIMIT 20 OFFSET 0", $result);
+
+        // all parameters except state (since it doesn't exist in current DB structure)
+        $result                     =   createSelectQuery('2013-07-01 00:00:00', '2013-12-01 00:00:00', 'Velachery', 'Chennai', 'Tamil Nadu', 'saiy2k', 2);
+        $this->assertSame("SELECT * FROM video WHERE time >= '2013-07-01 00:00:00' AND time <= '2013-12-01 00:00:00' AND town LIKE '%Velachery%' AND city LIKE '%Chennai%' AND uploadedBy LIKE '%saiy2k%' ORDER BY time DESC LIMIT 20 OFFSET 20", $result);
+
+    }
+
+
+
+    /**
      * Negative Unit Test Cases for findParameter
      */
     public function test_findParameter_negative() {
