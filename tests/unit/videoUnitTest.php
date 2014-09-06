@@ -27,16 +27,77 @@
  * @author          saiy2k <http://saiy2k.blogspot.in>
  * @link            https://github.com/GethuGames/Traffic-Violation-Portal-REST-API
  *
+ * Test Data Specs:
+ *   * 4 Pages
+ *   * xx videos
+ *   * yy complaints
+ *   * [list here]
+ *
  * TODO: Test cases for `openDB()` and `createSelectQuery()`
  *
  */
 
+
 class videoUnitTest extends Slim_Framework_TestCase {
+
+    /**
+     * Negative Unit Test Cases for generatePagingData
+     * @expectedException Invalidargumentexception
+     */
+    public function test_generatePagingData_negative() {
+
+        // setup DB
+        $config                     =   require 'app/config_dev.php';
+        openDB($config['db']);
+
+        // check with a character
+        $result                     =   generatePagingData('1');
+
+        // check with non number
+        $result                     =   generatePagingData(array());
+
+    }
+
+    /**
+     * Positive Unit Test Cases for generatePagingData
+     */
+    public function test_generatePagingData_positive() {
+
+        // setup DB
+        $config                     =   require 'app/config_dev.php';
+        openDB($config['db']);
+
+        // check with the First Page
+        $result                     =   generatePagingData(1);
+        $this->assertSame(3, count($result));
+        $this->assertSame('/video/?page=1', $result['first']);
+        $this->assertSame('/video/?page=4', $result['last']);
+        $this->assertSame('/video/?page=2', $result['next']);
+
+        // check with the last Page
+        $result                     =   generatePagingData(4);
+        $this->assertSame(3, count($result));
+        $this->assertSame('/video/?page=1', $result['first']);
+        $this->assertSame('/video/?page=3', $result['prev']);
+        $this->assertSame('/video/?page=4', $result['last']);
+
+        // check with the 2nd Page
+        $result                     =   generatePagingData(2);
+        $this->assertSame(4, count($result));
+        $this->assertSame('/video/?page=1', $result['first']);
+        $this->assertSame('/video/?page=1', $result['prev']);
+        $this->assertSame('/video/?page=3', $result['next']);
+        $this->assertSame('/video/?page=4', $result['last']);
+
+        // check with a random page number, when test data set grows
+
+    }
 
     /**
      * Negative Unit Test Cases for createSelectQuery
      */
     public function test_createSelectQuery_negative() {
+
     }
 
     /**
@@ -45,27 +106,27 @@ class videoUnitTest extends Slim_Framework_TestCase {
     public function test_createSelectQuery_Positive() {
 
         // all null parameters
-        $result                     =   createSelectQuery(null, null, null, null, null, null, 1);
+        $result                     =   createSelectQuery(null, null, null, null, null, null, 1, 20);
         $this->assertSame('SELECT * FROM video ORDER BY time DESC LIMIT 20 OFFSET 0', $result);
 
         // videos from 3rd page
-        $result                     =   createSelectQuery(null, null, null, null, null, null, 3);
+        $result                     =   createSelectQuery(null, null, null, null, null, null, 3, 20);
         $this->assertSame('SELECT * FROM video ORDER BY time DESC LIMIT 20 OFFSET 40', $result);
 
         // all videos from Velachery
-        $result                     =   createSelectQuery(null, null, 'Velachery', null, null, null, 1);
+        $result                     =   createSelectQuery(null, null, 'Velachery', null, null, null, 1, 20);
         $this->assertSame("SELECT * FROM video WHERE town LIKE '%Velachery%' ORDER BY time DESC LIMIT 20 OFFSET 0", $result);
 
         // all videos from Jan 1, 2014
-        $result                     =   createSelectQuery('2014-01-01 00:00:00', null, null, null, null, null, 1);
+        $result                     =   createSelectQuery('2014-01-01 00:00:00', null, null, null, null, null, 1, 20);
         $this->assertSame("SELECT * FROM video WHERE time >= '2014-01-01 00:00:00' ORDER BY time DESC LIMIT 20 OFFSET 0", $result);
 
         // all videos between July 1, 2013 and December 1, 2013
-        $result                     =   createSelectQuery('2013-07-01 00:00:00', '2013-12-01 00:00:00', null, null, null, null, 1);
+        $result                     =   createSelectQuery('2013-07-01 00:00:00', '2013-12-01 00:00:00', null, null, null, null, 1, 20);
         $this->assertSame("SELECT * FROM video WHERE time >= '2013-07-01 00:00:00' AND time <= '2013-12-01 00:00:00' ORDER BY time DESC LIMIT 20 OFFSET 0", $result);
 
         // all parameters except state (since it doesn't exist in current DB structure)
-        $result                     =   createSelectQuery('2013-07-01 00:00:00', '2013-12-01 00:00:00', 'Velachery', 'Chennai', 'Tamil Nadu', 'saiy2k', 2);
+        $result                     =   createSelectQuery('2013-07-01 00:00:00', '2013-12-01 00:00:00', 'Velachery', 'Chennai', 'Tamil Nadu', 'saiy2k', 2, 20);
         $this->assertSame("SELECT * FROM video WHERE time >= '2013-07-01 00:00:00' AND time <= '2013-12-01 00:00:00' AND town LIKE '%Velachery%' AND city LIKE '%Chennai%' AND uploadedBy LIKE '%saiy2k%' ORDER BY time DESC LIMIT 20 OFFSET 20", $result);
 
     }

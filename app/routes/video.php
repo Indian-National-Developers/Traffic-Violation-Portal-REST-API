@@ -56,7 +56,7 @@ $app->get('/video/', function () use ($app) {
     $userFilter                     =   findParameter($paramsArray, 'uploader');
     $page                           =   findParameter($paramsArray, 'page');
 
-    $query                          =   createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFilter, $stateFilter, $userFilter, $page);
+    $query                          =   createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFilter, $stateFilter, $userFilter, $page, 20);
     $result                         =   mysql_query($query) or die('Could not query');
     $videoJson                      =   array();
 
@@ -66,11 +66,7 @@ $app->get('/video/', function () use ($app) {
         }
     }
 
-    $pagingJson                     =   array();
-    $pagingJson['first']            =   "/video/?page=1";
-    if ($page > 1) $pagingJson['prev']= "/video/?page=" . ($page - 1);
-    if ($page < 4) $pagingJson['next']= "/video/?page=" . ($page + 1);
-    $pagingJson['last']             =   "/video/?page=4";
+    $pagingJson                     =   generatePagingData($page);
 
     $responseData                   =   array("data" => $videoJson,
                                               "paging" => $pagingJson);
@@ -79,6 +75,10 @@ $app->get('/video/', function () use ($app) {
 
     mysql_close();
 });
+
+/**
+ * given current page count, this function find the total number of
+ *
 
 /**
  * open a connection to DB server and selects a DB, based on
@@ -120,7 +120,7 @@ function openDB($dbConfig) {
  *
  * @return  string                              string representing SQL query
  */
-function createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFilter, $stateFilter, $userFilter, $page) {
+function createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFilter, $stateFilter, $userFilter, $page, $limit) {
 
     $query                          =   "SELECT * FROM video ";
     if ($fromDateFilter || $toDateFilter || $townFilter || $cityFilter || $stateFilter || $userFilter) {
@@ -152,7 +152,7 @@ function createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFil
         }
     }
     $offsetCount                    =   ($page - 1) * 20;
-    $query                          =   $query . "ORDER BY time DESC LIMIT 20 OFFSET ". $offsetCount;
+    $query                          =   $query . "ORDER BY time DESC LIMIT " . $limit . " OFFSET ". $offsetCount;
 
     return                              $query;
 }
@@ -279,6 +279,34 @@ function findPageParameter($params) {
         return                          1;
 
     return                              (int)$page;
+}
+
+/**
+ * Generates an array of key-value pairs that depicts the 
+ * links to first, last, next and prev pages, whichever exists
+ *
+ * @param   $page                       current page index
+ *
+ * @return  Array                       array of key value pairs
+ */
+function generatePagingData($page) {
+
+    if (!is_numeric($page)) {
+        throw new Invalidargumentexception();
+    }
+
+    $totalCountResult               =   mysql_query('SELECT COUNT(1) FROM video');
+    $num_rows                       =   mysql_result($totalCountResult, 0, 0);
+
+    $lastPageIndex                  =   ceil($num_rows / 20.0);
+    $pagingJson                     =   array();
+    $pagingJson['first']            =   "/video/?page=1";
+    if ($page > 1) $pagingJson['prev']                  =   "/video/?page=" . ($page - 1);
+    if ($page < $lastPageIndex) $pagingJson['next']     =   "/video/?page=" . ($page + 1);
+    $pagingJson['last']             =   "/video/?page=" . $lastPageIndex;
+
+    return                              $pagingJson;
+
 }
 
 function haltExecutionOnError($errorMessage) {
