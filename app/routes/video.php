@@ -32,10 +32,17 @@
  *
  */
 
-// loading DB Configuration
+require_once "common.php";
 
 /**
- * GET Videos; returns all the videos
+ * GET Video Endpoint
+ * Returns first 20 Videos in a page, sorted by recency, by default.
+ * If any parameters are given, returns videos as per the request.
+ *
+ * TODO:
+ * 1. Also need to retrieve the violations in each video and return
+ *    them with the video data.
+ *
  */
 $app->get('/video/', function () use ($app) {
     $config                         =   require 'app/config_dev.php';
@@ -77,34 +84,46 @@ $app->get('/video/', function () use ($app) {
 });
 
 /**
- * given current page count, this function find the total number of
- *
-
-/**
- * open a connection to DB server and selects a DB, based on
- * given configuration Dictionary.
- *
- * @param   Dictionary                  ['host', 'userName', 'password', 'dbName'];
- *
- * @return  bool                        success or not
+ * POST Video Endpoint
  */
-function openDB($dbConfig) {
-    $dbLink                         =   mysql_connect($dbConfig['host'],
-                                                      $dbConfig['userName'],
-                                                      $dbConfig['password']);
-    if (!$dbLink) {
-        haltExecutionOnError(mysql_error());
-        return                          false;
+$app->post('/video/', function () use ($app) {
+    $config                         =   require 'app/config_dev.php';
+    $dbConfig                       =   $config['db'];
+
+    $dbOpened                       =   openDB($dbConfig);
+    if (!$dbOpened) {
+        return;
     }
 
-    $success                        =   mysql_select_db($dbConfig['dbName']);
-    if (!$success) {
-        haltExecutionOnError(mysql_error());
-        return                          false;
+    // retrieve JSON in Request body
+    $newVidData                     =   json_decode($app->request()->getBody());
+    print_r($newVidData);
+    $videoURL                       =   $newVidData->videoURL;
+    $thumbURL                       =   '';
+    $uploadedBy                     =   $newVidData->uploadedBy;
+    $analyzedBy                     =   $newVidData->analyzedBy;
+    $locality                       =   $newVidData->locality;
+    $town                           =   $newVidData->town;
+    $city                           =   $newVidData->city;
+    $pincode                        =   $newVidData->pincode;
+    $time                           =   $newVidData->time;
+
+    $query                          =   "INSERT INTO video (videoURL, thumbURL, uploadedBy, analyzedBy, locality, town, city, pincode, time) 
+                                            VALUES ('" . $videoURL . "', '" . $thumbURL . "', '" . $uploadedBy . "', '" . $analyzedBy . "', '" . $locality . "', '" . $town . "', '" . $city  . "', '" . $pincode  . "', '" . $time . "')";
+    echo $query;
+    $result                         =   mysql_query($query);
+
+    if ($result) {
+        $responseData               =   array("result" => "success", "videoID" => mysql_insert_id());
+    } else {
+        $responseData               =   array("result" => "fail", "message" => mysql_error());
     }
 
-    return                              $success;
-}
+    echo json_encode($responseData);
+
+    mysql_close();
+});
+
 
 /**
  * Forms a SQL query to select `video` records based on given parameters
@@ -158,130 +177,6 @@ function createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFil
 }
 
 /**
- * finds the specified parameter in the given parameter array
- * and returns it
- *
- * @param   Array                       array of GET parameters
- * @param   String                      parameter name to search for
- *
- * @return  Object                      int or String or String Array of parameters
- */
-function findParameter($params, $paramName) {
-
-    if ($paramName == 'fromDate' || $paramName == 'toDate') {
-        return                          findDateParameterForKey($params, $paramName);
-    } else if ($paramName == 'town' || $paramName == 'city' || $paramName == 'state' || $paramName == 'uploader') {
-        return                          findRegularParameterForKey($params, $paramName);
-    } else if ($paramName == 'page') {
-        return                          findPageParameter($params);
-    }
-
-}
-
-/**
- * find a regular parameter from the parameter array for the given key
- * Returns `null` if not found or is invalid
- * TODO: Throws exception, if invalid
- *
- * @param   Array                       array of GET parameters
- * @param   String                      Any key that holds a textual parameter value
- *
- * @return  String                      datetime the value of the parameter as a string
- */
-function findRegularParameterForKey($params, $keyParam) {
-
-    // if null is passed, return null
-    if($params == null)
-        return                          null;
-
-    // if date param is not passed, return null
-    if(!array_key_exists($keyParam, $params))
-        return                          null;
-
-    $paramValue                     =   $params[$keyParam];
-
-    // if Param value is not mentioned, return null
-    if ($paramValue == null)
-        return                          null;
-
-    // if Param value is not string, return null
-    if (!is_string($paramValue))
-        return                          null;
-
-    return                              $paramValue;
-}
-
-/**
- * find the date parameter from the parameter array for the given key
- * Returns `null` if not found or is invalid
- * TODO: Throws exception, if invalid
- *
- * @param   Array                       array of GET parameters
- * @param   String                      either `fromDate` or `toDate`. Any key that holds date value
- *
- * @return  datetime                    datetime string in the format `Y-m-d H-i-s`
- */
-function findDateParameterForKey($params, $keyParam) {
-
-    // if null is passed, return null
-    if($params == null)
-        return                          null;
-
-    // if date param is not passed, return null
-    if(!array_key_exists($keyParam, $params))
-        return                          null;
-
-    $dateParam                      =   $params[$keyParam];
-
-    // if date Param value is not mentioned, return null
-    if ($dateParam == null)
-        return                          null;
-
-    // Date validation: http://stackoverflow.com/questions/19271381/correctly-determine-if-date-string-is-a-valid-date-in-that-format
-    $d                              =   DateTime::createFromFormat('Y-m-d', $dateParam);
-    if ($d && $d->format('Y-m-d') == $dateParam) {
-        return $d->format('Y-m-d');
-    }
-
-    $d                              =   DateTime::createFromFormat('Y-m-d H:i:s', $dateParam);
-    if ($d && $d->format('Y-m-d H:i:s') == $dateParam) {
-        return $d->format('Y-m-d H:i:s');
-    } else {
-        return                          null;
-    }
-}
-
-/**
- * finds the value of page parameter and returns it.
- * Returns 1, in case of invalid parameter or null
- *
- * @param   $params                     array of GET parameters
- *
- * @return  int                         Page number
- */
-function findPageParameter($params) {
-
-    // if null is passed, return first page
-    if($params == null)
-        return                          1;
-
-    // if page param is not passed, return first page
-    if(!array_key_exists('page',$params))
-        return                          1;
-
-    $page                           =   $params['page'];
-
-    // if page value is not mentioned, return first page
-    if ($page == null)
-        return                          1;
-
-    if ( !is_numeric($page) )
-        return                          1;
-
-    return                              (int)$page;
-}
-
-/**
  * Generates an array of key-value pairs that depicts the 
  * links to first, last, next and prev pages, whichever exists
  *
@@ -307,14 +202,6 @@ function generatePagingData($page) {
 
     return                              $pagingJson;
 
-}
-
-function haltExecutionOnError($errorMessage) {
-    /*
-    mysql_close();
-    $errResponse                    =   array('status' => 'error', 'description' => $errorMessage);
-    $app->halt(500, json_encode($errResponse));
-     */
 }
 
 ?>

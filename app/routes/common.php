@@ -31,54 +31,6 @@
  *
  */
 
-// loading DB Configuration
-
-/**
- * GET Videos; returns all the videos
- */
-$app->get('/video/', function () use ($app) {
-    $config                         =   require 'app/config_dev.php';
-    $dbConfig                       =   $config['db'];
-
-    $dbOpened                       =   openDB($dbConfig);
-    if (!$dbOpened) {
-        return;
-    }
-
-    // retrieve the parameters passed to filter the result
-    $paramsArray                    =   $app->request()->params();
-    $fromDateFilter                 =   findParameter($paramsArray, 'fromDate');
-    $toDateFilter                   =   findParameter($paramsArray, 'toDate');
-    $townFilter                     =   findParameter($paramsArray, 'town');
-    $cityFilter                     =   findParameter($paramsArray, 'city');
-    $stateFilter                    =   findParameter($paramsArray, 'state');
-    $userFilter                     =   findParameter($paramsArray, 'uploader');
-    $page                           =   findParameter($paramsArray, 'page');
-
-    $query                          =   createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFilter, $stateFilter, $userFilter, $page, 20);
-    $result                         =   mysql_query($query) or die('Could not query');
-    $videoJson                      =   array();
-
-    if(mysql_num_rows($result)){
-        while($row = mysql_fetch_array($result, MYSQL_ASSOC)){
-            $videoJson[]            =   $row;
-        }
-    }
-
-    $pagingJson                     =   generatePagingData($page);
-
-    $responseData                   =   array("data" => $videoJson,
-                                              "paging" => $pagingJson);
-
-    echo json_encode($responseData);
-
-    mysql_close();
-});
-
-/**
- * given current page count, this function find the total number of
- *
-
 /**
  * open a connection to DB server and selects a DB, based on
  * given configuration Dictionary.
@@ -103,57 +55,6 @@ function openDB($dbConfig) {
     }
 
     return                              $success;
-}
-
-/**
- * Forms a SQL query to select `video` records based on given parameters
- * and returns it
- *
- * @param   date        $fromDateFilter         dateTime from when videos should be retrieved. can be set to null
- * @param   date        $toDateFilter           dateTime upto which videos should be retrieved. can be set to null
- * @param   string      $townFilter             name of the town, where the video is taken. can be set to null
- * @param   string      $cityFilter             name of the city, where the video is taken. can be set to null
- * @param   string      $stateFilter            name of the state, where the video is taken. can be set to null
- * @param   string      $userFilter             name of the user who uploaded the Video. can be set to null
- * @param   int         $page                   index of the page to retrieve the videos from
- *
- * @return  string                              string representing SQL query
- */
-function createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFilter, $stateFilter, $userFilter, $page, $limit) {
-
-    $query                          =   "SELECT * FROM video ";
-    if ($fromDateFilter || $toDateFilter || $townFilter || $cityFilter || $stateFilter || $userFilter) {
-        $query                      =   $query . 'WHERE ';
-        $conditionAdded             =   false;
-        if ($fromDateFilter) {
-            $query                  =   $query . "time >= '" . $fromDateFilter . "' ";
-            $conditionAdded         =   true;
-        }
-        if ($toDateFilter) {
-            if ($conditionAdded)        $query = $query . 'AND ';
-            $query                  =   $query . "time <= '" . $toDateFilter . "' ";
-            $conditionAdded         =   true;
-        }
-        if ($townFilter) {
-            if ($conditionAdded)        $query = $query . 'AND ';
-            $query                  =   $query . "town LIKE '%" . $townFilter . "%' ";
-            $conditionAdded         =   true;
-        }
-        if ($cityFilter) {
-            if ($conditionAdded)        $query = $query . 'AND ';
-            $query                  =   $query . "city LIKE '%" . $cityFilter . "%' ";
-            $conditionAdded         =   true;
-        }
-        if ($userFilter) {
-            if ($conditionAdded)        $query = $query . 'AND ';
-            $query                  =   $query . "uploadedBy LIKE '%" . $userFilter . "%' ";
-            $conditionAdded         =   true;
-        }
-    }
-    $offsetCount                    =   ($page - 1) * 20;
-    $query                          =   $query . "ORDER BY time DESC LIMIT " . $limit . " OFFSET ". $offsetCount;
-
-    return                              $query;
 }
 
 /**
@@ -278,34 +179,6 @@ function findPageParameter($params) {
         return                          1;
 
     return                              (int)$page;
-}
-
-/**
- * Generates an array of key-value pairs that depicts the 
- * links to first, last, next and prev pages, whichever exists
- *
- * @param   $page                       current page index
- *
- * @return  Array                       array of key value pairs
- */
-function generatePagingData($page) {
-
-    if (!is_numeric($page)) {
-        throw new Invalidargumentexception();
-    }
-
-    $totalCountResult               =   mysql_query('SELECT COUNT(1) FROM video');
-    $num_rows                       =   mysql_result($totalCountResult, 0, 0);
-
-    $lastPageIndex                  =   ceil($num_rows / 20.0);
-    $pagingJson                     =   array();
-    $pagingJson['first']            =   "/video/?page=1";
-    if ($page > 1) $pagingJson['prev']                  =   "/video/?page=" . ($page - 1);
-    if ($page < $lastPageIndex) $pagingJson['next']     =   "/video/?page=" . ($page + 1);
-    $pagingJson['last']             =   "/video/?page=" . $lastPageIndex;
-
-    return                              $pagingJson;
-
 }
 
 function haltExecutionOnError($errorMessage) {
