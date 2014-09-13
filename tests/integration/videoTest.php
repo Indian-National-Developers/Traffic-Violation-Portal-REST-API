@@ -66,42 +66,42 @@ class videoTest extends ApiEndpointsTest {
                 $cursor             =   null;
         } while ($cursor !== null);
 
-        $this->assertSame(62, $totalVideoCount);
+        $this->assertSame(61, $totalVideoCount);
         //fwrite(STDOUT, print_r($totalVideoCount, TRUE));
-    }
-
-
-    public function traversePagesOfVideos() {
-        /*
-        $this->get('/video/');
-        $this->assertEquals(200, $this->response->status());
-
-        $rawResponse                =   $this->response->body();
-        $jsonResponse               =   json_decode($rawResponse);
-         */
     }
 
     /**
      * Test the Video IDs of the returned videos.
      */
     public function testVideoIDs() {
-        //$this->get('/video/');
-        //$this->assertEquals(200, $this->response->status());
 
-        //$rawResponse                =   $this->response->body();
-        //$jsonResponse               =   json_decode($rawResponse);
-        //$vidJSON                    =   $jsonResponse->data[0];
-        //$videoID                    =   $vidJSON->videoID;
-        //$this->assertSame('51', $videoID);
+        $response                   =   $this->loadEndpoint('/video/');
+        $header                     =   $response['info'];
+        $jsonResponse               =   json_decode($response['body']);
+        $this->assertEquals(200, $header['http_code']);
 
-        //$vidJSON                    =   $jsonResponse->data[1];
-        //$videoID                    =   $vidJSON->videoID;
-        //$this->assertSame('50', $videoID);
+        $vidJSON                    =   $jsonResponse->data[0];
+        $videoID                    =   $vidJSON->videoID;
+        $this->assertSame('51', $videoID);
 
-        //$vidJSON                    =   $jsonResponse->data[2];
-        //$videoID                    =   $vidJSON->videoID;
-        //$this->assertSame('52', $videoID);
+        $vidJSON                    =   $jsonResponse->data[1];
+        $videoID                    =   $vidJSON->videoID;
+        $this->assertSame('50', $videoID);
+
+        $vidJSON                    =   $jsonResponse->data[2];
+        $videoID                    =   $vidJSON->videoID;
+        $this->assertSame('52', $videoID);
+
     }
+
+    /**
+     * Tests to write:
+     *  - check for other fields of the Video including 
+     *    videoURl, uploadedBy, analyzedBy, locality,
+     *    town, city, pincode, time
+     *  - check for complaint count
+     *  - check for complaint details
+     */
 
 }
 
