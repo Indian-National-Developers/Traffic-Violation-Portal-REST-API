@@ -32,42 +32,42 @@
  *
  */
 
-class videoTest extends Slim_Framework_TestCase {
+class videoTest extends ApiEndpointsTest {
 
     /**
      * Test the Number of Videos in the regular GET request
      */
     public function testVideoCountInPage1() {
-        /*
-        $this->get('/video/');
-        $this->assertEquals(200, $this->response->status());
 
-        $rawResponse                =   $this->response->body();
-        $jsonResponse               =   json_decode($rawResponse);
-
-        //fwrite(STDERR, print_r($jsonResponse, TRUE));
-        $this->assertSame(20, count($jsonResponse->data));
-         */
+        $response                   =   $this->loadEndpoint('/video/');
+        $header                     =   $response['info'];
+        $jsonResponse               =   json_decode($response['body']);
+        $this->assertEquals(200, $header['http_code']);
+        $this->assertEquals(count($jsonResponse->data), 20);
     }
 
     /**
      * Test the Number of Videos in Total
      */
     public function testVideoCountInTotal() {
-        //$cursor                     =   '/video/';
-        //$totalVideoCount            =   0;
+        $cursor                     =   '/video/';
+        $totalVideoCount            =   0;
 
-        //do {
-        //    $this->get($cursor);
-        //    $this->assertEquals(200, $this->response->status());
+        do {
+            $response               =   $this->loadEndpoint($cursor);
+            $header                 =   $response['info'];
+            $jsonResponse           =   json_decode($response['body']);
+            $this->assertEquals(200, $header['http_code']);
+            $totalVideoCount        +=  count($jsonResponse->data);
+            $propExists             =   property_exists($jsonResponse->paging, 'next');
+            if ($propExists) 
+                $cursor             =   $jsonResponse->paging->next;
+            else 
+                $cursor             =   null;
+        } while ($cursor !== null);
 
-        //    $rawResponse            =   $this->response->body();
-        //    $jsonResponse           =   json_decode($rawResponse);
-        //    $totalVideoCount        +=  count($jsonResponse->data);
-        //    $cursor                 =   $jsonResponse->paging->next;
-        //} while ($cursor !== null);
-
-        //$this->assertSame(61, $totalVideoCount);
+        $this->assertSame(62, $totalVideoCount);
+        //fwrite(STDOUT, print_r($totalVideoCount, TRUE));
     }
 
 
