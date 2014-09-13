@@ -32,45 +32,76 @@
  *
  */
 
-class videoTest extends Slim_Framework_TestCase {
+class videoTest extends ApiEndpointsTest {
 
     /**
      * Test the Number of Videos in the regular GET request
      */
-    public function testVideoCount() {
-        $this->get('/video/');
-        $this->assertEquals(200, $this->response->status());
+    public function testVideoCountInPage1() {
 
-        $rawResponse                =   $this->response->body();
-        $jsonResponse               =   json_decode($rawResponse);
-        $firstVidJSON               =   $jsonResponse->data[0];
-        $videoID                    =   $firstVidJSON->videoID;
+        $response                   =   $this->loadEndpoint('/video/');
+        $header                     =   $response['info'];
+        $jsonResponse               =   json_decode($response['body']);
+        $this->assertEquals(200, $header['http_code']);
+        $this->assertEquals(count($jsonResponse->data), 20);
+    }
 
-        $this->assertSame(3, count($jsonResponse->data));
-        //fwrite(STDERR, print_r($firstVidJSON, TRUE));
+    /**
+     * Test the Number of Videos in Total
+     */
+    public function testVideoCountInTotal() {
+        $cursor                     =   '/video/';
+        $totalVideoCount            =   0;
+
+        do {
+            $response               =   $this->loadEndpoint($cursor);
+            $header                 =   $response['info'];
+            $jsonResponse           =   json_decode($response['body']);
+            $this->assertEquals(200, $header['http_code']);
+            $totalVideoCount        +=  count($jsonResponse->data);
+            $propExists             =   property_exists($jsonResponse->paging, 'next');
+            if ($propExists) 
+                $cursor             =   $jsonResponse->paging->next;
+            else 
+                $cursor             =   null;
+        } while ($cursor !== null);
+
+        $this->assertSame(61, $totalVideoCount);
+        //fwrite(STDOUT, print_r($totalVideoCount, TRUE));
     }
 
     /**
      * Test the Video IDs of the returned videos.
      */
     public function testVideoIDs() {
-        $this->get('/video/');
-        $this->assertEquals(200, $this->response->status());
 
-        $rawResponse                =   $this->response->body();
-        $jsonResponse               =   json_decode($rawResponse);
+        $response                   =   $this->loadEndpoint('/video/');
+        $header                     =   $response['info'];
+        $jsonResponse               =   json_decode($response['body']);
+        $this->assertEquals(200, $header['http_code']);
+
         $vidJSON                    =   $jsonResponse->data[0];
         $videoID                    =   $vidJSON->videoID;
-        $this->assertSame(1, $videoID);
+        $this->assertSame('51', $videoID);
 
         $vidJSON                    =   $jsonResponse->data[1];
         $videoID                    =   $vidJSON->videoID;
-        $this->assertSame(2, $videoID);
+        $this->assertSame('50', $videoID);
 
         $vidJSON                    =   $jsonResponse->data[2];
         $videoID                    =   $vidJSON->videoID;
-        $this->assertSame(3, $videoID);
+        $this->assertSame('52', $videoID);
+
     }
+
+    /**
+     * Tests to write:
+     *  - check for other fields of the Video including 
+     *    videoURl, uploadedBy, analyzedBy, locality,
+     *    town, city, pincode, time
+     *  - check for complaint count
+     *  - check for complaint details
+     */
 
 }
 

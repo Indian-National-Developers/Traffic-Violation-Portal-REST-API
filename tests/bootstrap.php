@@ -81,4 +81,30 @@ class Slim_Framework_TestCase extends PHPUnit_Framework_TestCase
     }
 }
 
+// http://stackoverflow.com/a/18084934/390150
+class ApiEndpointsTest extends PHPUnit_Framework_TestCase
+{
+    protected $api_url = "http://localhost/traffic/index.php";
+
+    //create a function that will allow you to call API endpoints at-will.
+    public function loadEndpoint($url) {
+        $ch = curl_init(); 
+        curl_setopt($ch, CURLOPT_URL, $this->api_url . $url); 
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $output = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        curl_close($ch);
+        return array(
+          'body' => $output,
+          'info' => $info
+        );
+    }
+
+    //this allows you to write messages in the test output
+    public function printToConsole($statement) {
+        fwrite(STDOUT, $statement."\n");
+    }
+
+}
+
 /* End of file bootstrap.php */

@@ -36,8 +36,9 @@ return array(
     ),
     'db'    =>  array(
         'host'                      =>  'localhost',
-        'name'                      =>  'TrafficPortal',
-        'password'                  =>  'password',
+        'userName'                  =>  'root',
+        'password'                  =>  'root',
+        'dbName'                    =>  'grayface_traffic',
     )
 );
 

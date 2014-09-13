@@ -28,9 +28,9 @@
  *
  */
 
-require 'routes/video.php';
-require 'routes/complaint.php';
-require 'routes/user.php';
+require_once 'routes/video.php';
+require_once 'routes/complaint.php';
+require_once 'routes/user.php';
 
 /**
  * GET Version; returns the API Version, that is defined in config
