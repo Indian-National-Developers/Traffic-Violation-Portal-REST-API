@@ -21,7 +21,7 @@
  *
  * DESCRIPTION
  * ***********
- * This class has unit test for all functions in `app/routes/video.php`
+ * This class has unit test for all functions in `app/routes/Video.php`
  * It tests for both positive and negative test cases
  *
  * @author          saiy2k <http://saiy2k.blogspot.in>
@@ -29,7 +29,7 @@
  *
  * Test Data Specs:
  *   * 4 Pages
- *   * xx videos
+ *   * xx Videos
  *   * yy complaints
  *   * [list here]
  *
@@ -38,7 +38,7 @@
  */
 
 
-class videoUnitTest extends Slim_Framework_TestCase {
+class VideoUnitTest extends Slim_Framework_TestCase {
 
     /**
      * Negative Unit Test Cases for generatePagingData
@@ -48,13 +48,13 @@ class videoUnitTest extends Slim_Framework_TestCase {
 
         // setup DB
         $config                     =   require 'app/config_dev.php';
-        openDB($config['db']);
+        $dbLink                     =   openDB($config['db']);
 
         // check with a character
-        $result                     =   generatePagingData('1');
+        $result                     =   generatePagingData($dbLink, '1');
 
         // check with non number
-        $result                     =   generatePagingData(array());
+        $result                     =   generatePagingData($dbLink, array());
 
     }
 
@@ -65,24 +65,24 @@ class videoUnitTest extends Slim_Framework_TestCase {
 
         // setup DB
         $config                     =   require 'app/config_dev.php';
-        openDB($config['db']);
+        $dbLink                     =   openDB($config['db']);
 
         // check with the First Page
-        $result                     =   generatePagingData(1);
+        $result                     =   generatePagingData($dbLink, 1);
         $this->assertSame(3, count($result));
         $this->assertSame('/video/?page=1', $result['first']);
         $this->assertSame('/video/?page=4', $result['last']);
         $this->assertSame('/video/?page=2', $result['next']);
 
         // check with the last Page
-        $result                     =   generatePagingData(4);
+        $result                     =   generatePagingData($dbLink, 4);
         $this->assertSame(3, count($result));
         $this->assertSame('/video/?page=1', $result['first']);
         $this->assertSame('/video/?page=3', $result['prev']);
         $this->assertSame('/video/?page=4', $result['last']);
 
         // check with the 2nd Page
-        $result                     =   generatePagingData(2);
+        $result                     =   generatePagingData($dbLink, 2);
         $this->assertSame(4, count($result));
         $this->assertSame('/video/?page=1', $result['first']);
         $this->assertSame('/video/?page=1', $result['prev']);
@@ -107,27 +107,27 @@ class videoUnitTest extends Slim_Framework_TestCase {
 
         // all null parameters
         $result                     =   createSelectQuery(null, null, null, null, null, null, 1, 20);
-        $this->assertSame('SELECT * FROM video ORDER BY time DESC LIMIT 20 OFFSET 0', $result);
+        $this->assertSame('SELECT * FROM video ORDER BY shotOn DESC LIMIT 20 OFFSET 0', $result);
 
         // videos from 3rd page
         $result                     =   createSelectQuery(null, null, null, null, null, null, 3, 20);
-        $this->assertSame('SELECT * FROM video ORDER BY time DESC LIMIT 20 OFFSET 40', $result);
+        $this->assertSame('SELECT * FROM video ORDER BY shotOn DESC LIMIT 20 OFFSET 40', $result);
 
         // all videos from Velachery
         $result                     =   createSelectQuery(null, null, 'Velachery', null, null, null, 1, 20);
-        $this->assertSame("SELECT * FROM video WHERE town LIKE '%Velachery%' ORDER BY time DESC LIMIT 20 OFFSET 0", $result);
+        $this->assertSame("SELECT * FROM video WHERE town LIKE '%Velachery%' ORDER BY shotOn DESC LIMIT 20 OFFSET 0", $result);
 
         // all videos from Jan 1, 2014
         $result                     =   createSelectQuery('2014-01-01 00:00:00', null, null, null, null, null, 1, 20);
-        $this->assertSame("SELECT * FROM video WHERE time >= '2014-01-01 00:00:00' ORDER BY time DESC LIMIT 20 OFFSET 0", $result);
+        $this->assertSame("SELECT * FROM video WHERE shotOn >= '2014-01-01 00:00:00' ORDER BY shotOn DESC LIMIT 20 OFFSET 0", $result);
 
         // all videos between July 1, 2013 and December 1, 2013
         $result                     =   createSelectQuery('2013-07-01 00:00:00', '2013-12-01 00:00:00', null, null, null, null, 1, 20);
-        $this->assertSame("SELECT * FROM video WHERE time >= '2013-07-01 00:00:00' AND time <= '2013-12-01 00:00:00' ORDER BY time DESC LIMIT 20 OFFSET 0", $result);
+        $this->assertSame("SELECT * FROM video WHERE shotOn >= '2013-07-01 00:00:00' AND shotOn <= '2013-12-01 00:00:00' ORDER BY shotOn DESC LIMIT 20 OFFSET 0", $result);
 
         // all parameters except state (since it doesn't exist in current DB structure)
         $result                     =   createSelectQuery('2013-07-01 00:00:00', '2013-12-01 00:00:00', 'Velachery', 'Chennai', 'Tamil Nadu', 'saiy2k', 2, 20);
-        $this->assertSame("SELECT * FROM video WHERE time >= '2013-07-01 00:00:00' AND time <= '2013-12-01 00:00:00' AND town LIKE '%Velachery%' AND city LIKE '%Chennai%' AND uploadedBy LIKE '%saiy2k%' ORDER BY time DESC LIMIT 20 OFFSET 20", $result);
+        $this->assertSame("SELECT * FROM video WHERE shotOn >= '2013-07-01 00:00:00' AND shotOn <= '2013-12-01 00:00:00' AND town LIKE '%Velachery%' AND city LIKE '%Chennai%' AND uploadedBy LIKE '%saiy2k%' ORDER BY shotOn DESC LIMIT 20 OFFSET 20", $result);
 
     }
 
@@ -428,4 +428,4 @@ class videoUnitTest extends Slim_Framework_TestCase {
 
 }
 
-/* End of file videoTest.php */
+/* End of file VideoTest.php */

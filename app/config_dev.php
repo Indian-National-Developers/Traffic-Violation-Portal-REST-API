@@ -38,7 +38,7 @@ return array(
         'host'                      =>  'localhost',
         'userName'                  =>  'root',
         'password'                  =>  'root',
-        'dbName'                    =>  'grayface_traffic',
+        'dbName'                    =>  'tvp',
     )
 );
 

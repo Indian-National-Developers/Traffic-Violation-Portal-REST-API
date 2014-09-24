@@ -33,6 +33,7 @@
  */
 
 require_once "common.php";
+//require_once "address.php";
 
 /**
  * GET Video Endpoint
@@ -48,8 +49,8 @@ $app->get('/video/', function () use ($app) {
     $config                         =   require 'app/config_dev.php';
     $dbConfig                       =   $config['db'];
 
-    $dbOpened                       =   openDB($dbConfig);
-    if (!$dbOpened) {
+    $dbLink                         =   openDB($dbConfig);
+    if (!$dbLink) {
         return;
     }
 
@@ -63,24 +64,17 @@ $app->get('/video/', function () use ($app) {
     $userFilter                     =   findParameter($paramsArray, 'uploader');
     $page                           =   findParameter($paramsArray, 'page');
 
-    $query                          =   createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFilter, $stateFilter, $userFilter, $page, 20);
-    $result                         =   mysql_query($query) or die('Could not query');
-    $videoJson                      =   array();
+    $queryString                    =   createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFilter, $stateFilter, $userFilter, $page, 20);
 
-    if(mysql_num_rows($result)){
-        while($row = mysql_fetch_array($result, MYSQL_ASSOC)){
-            $videoJson[]            =   $row;
-        }
-    }
+    $statement                      =   $dbLink->query($queryString);
+    $results                        =   $statement->fetchAll(PDO::FETCH_ASSOC);
 
-    $pagingJson                     =   generatePagingData($page);
-
-    $responseData                   =   array("data" => $videoJson,
+    $pagingJson                     =   generatePagingData($dbLink, $page);
+    $responseData                   =   array("data" => $results,
                                               "paging" => $pagingJson);
 
     echo json_encode($responseData);
 
-    mysql_close();
 });
 
 /**
@@ -90,38 +84,33 @@ $app->post('/video/', function () use ($app) {
     $config                         =   require 'app/config_dev.php';
     $dbConfig                       =   $config['db'];
 
-    $dbOpened                       =   openDB($dbConfig);
-    if (!$dbOpened) {
+    $dbLink                         =   openDB($dbConfig);
+    if (!$dbLink) {
         return;
     }
 
     // retrieve JSON in Request body
-    $newVidData                     =   json_decode($app->request()->getBody());
-    print_r($newVidData);
-    $videoURL                       =   $newVidData->videoURL;
-    $thumbURL                       =   '';
-    $uploadedBy                     =   $newVidData->uploadedBy;
-    $analyzedBy                     =   $newVidData->analyzedBy;
-    $locality                       =   $newVidData->locality;
-    $town                           =   $newVidData->town;
-    $city                           =   $newVidData->city;
-    $pincode                        =   $newVidData->pincode;
-    $time                           =   $newVidData->time;
+    $newVidData                     =   (array)json_decode($app->request()->getBody());
+    //$newVidData[':addressID']       =   getAddressID($dbLink, $newVidData);
+    
+    // adding current date time
+    $addedOn                        =   date('Y-m-d H:i:s');
+    $newVidData[':addedOn']         =   $addedOn;
 
-    $query                          =   "INSERT INTO video (videoURL, thumbURL, uploadedBy, analyzedBy, locality, town, city, pincode, time) 
-                                            VALUES ('" . $videoURL . "', '" . $thumbURL . "', '" . $uploadedBy . "', '" . $analyzedBy . "', '" . $locality . "', '" . $town . "', '" . $city  . "', '" . $pincode  . "', '" . $time . "')";
-    echo $query;
-    $result                         =   mysql_query($query);
+    $query                          =   $dbLink->prepare("INSERT INTO Video
+        (videoURL, uploaderName, isAnonymous, latitude, longitude, shotOn, addedOn) 
+        VALUES (:videoURL, :uploaderName, :isAnonymous, :latitude, :longitude, :shotOn, :addedOn)");
 
-    if ($result) {
-        $responseData               =   array("result" => "success", "videoID" => mysql_insert_id());
+    $result                         =   $query->execute($newVidData);
+
+    if ($result == false) {
+        $responseData               =   array("result" => "success", "videoID" => $dbLink->lastInsertId());
     } else {
-        $responseData               =   array("result" => "fail", "message" => mysql_error());
+        $responseData               =   array("result" => "fail", "message" => $dbLink->errorInfo());
     }
 
     echo json_encode($responseData);
 
-    mysql_close();
 });
 
 
@@ -146,12 +135,12 @@ function createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFil
         $query                      =   $query . 'WHERE ';
         $conditionAdded             =   false;
         if ($fromDateFilter) {
-            $query                  =   $query . "time >= '" . $fromDateFilter . "' ";
+            $query                  =   $query . "shotOn >= '" . $fromDateFilter . "' ";
             $conditionAdded         =   true;
         }
         if ($toDateFilter) {
             if ($conditionAdded)        $query = $query . 'AND ';
-            $query                  =   $query . "time <= '" . $toDateFilter . "' ";
+            $query                  =   $query . "shotOn <= '" . $toDateFilter . "' ";
             $conditionAdded         =   true;
         }
         if ($townFilter) {
@@ -171,7 +160,7 @@ function createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFil
         }
     }
     $offsetCount                    =   ($page - 1) * 20;
-    $query                          =   $query . "ORDER BY time DESC LIMIT " . $limit . " OFFSET ". $offsetCount;
+    $query                          =   $query . "ORDER BY shotOn DESC LIMIT " . $limit . " OFFSET ". $offsetCount;
 
     return                              $query;
 }
@@ -184,14 +173,15 @@ function createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFil
  *
  * @return  Array                       array of key value pairs
  */
-function generatePagingData($page) {
+function generatePagingData($dbLink, $page) {
 
     if (!is_numeric($page)) {
         throw new Invalidargumentexception();
     }
 
-    $totalCountResult               =   mysql_query('SELECT COUNT(1) FROM video');
-    $num_rows                       =   mysql_result($totalCountResult, 0, 0);
+    $statement                      =   $dbLink->prepare("SELECT count(*) FROM video");
+    $statement->execute();
+    $num_rows                       =   $statement->fetchColumn();
 
     $lastPageIndex                  =   ceil($num_rows / 20.0);
     $pagingJson                     =   array();
