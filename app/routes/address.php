@@ -20,7 +20,11 @@
  *
  * DESCRIPTION
  * ***********
- * This file has several commonly used utility functions
+ * ADDRESS RESOLVER
+ * ****************
+ *
+ * This file has several functions to resolve the given address
+ * as text and to find the ID in Database.
  *
  * @author          saiy2k <http://saiy2k.blogspot.in>
  * @link            https://github.com/GethuGames/Traffic-Violation-Portal-REST-API
@@ -32,150 +36,130 @@
  */
 
 /**
- * open a connection to DB server and selects a DB, based on
- * given configuration Dictionary.
+ * relates the given address to existing data in DB and finds the
+ * addressID. If the given address doesn't relate, create new
+ * entities in DB and returns the addressID.
  *
- * @param   Dictionary                  ['host', 'userName', 'password', 'dbName'];
+ * @param   Object                      PDO Object
+ * @param   Array                       Array of parameters, including address, city, state, town, pincode.
  *
- * @return  bool                        success or not
+ * @return  String                      addressID for the given address
  */
-function openDB($dbConfig) {
-    $connectionString               =   "mysql:host=" . $dbConfig['host'] . ";dbname=" . $dbConfig['dbName'];
-    $dbLink                         =   new PDO($connectionString, $dbConfig['userName'], $dbConfig['password']);
-    $dbLink->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    return                              $dbLink;
-}
+function getAddressID($dbLink, $params) {
 
-/**
- * finds the specified parameter in the given parameter array
- * and returns it
- *
- * @param   Array                       array of GET parameters
- * @param   String                      parameter name to search for
- *
- * @return  Object                      int or String or String Array of parameters
- */
-function findParameter($params, $paramName) {
+    $selectedParams                 =   array(':address' => $params[':address'], ':pinCode' => $params[':pinCode']);
+    $queryString                    =   "SELECT ID
+        FROM address 
+        WHERE address LIKE :address AND pinCode = :pinCode";
+    $statement                      =   $dbLink->prepare($queryString);
+    $statement->execute($selectedParams);
+    $results                        =   $statement->fetchAll(PDO::FETCH_ASSOC);
 
-    if ($paramName == 'fromDate' || $paramName == 'toDate') {
-        return                          findDateParameterForKey($params, $paramName);
-    } else if ($paramName == 'town' || $paramName == 'city' || $paramName == 'state' || $paramName == 'uploader') {
-        return                          findRegularParameterForKey($params, $paramName);
-    } else if ($paramName == 'page') {
-        return                          findPageParameter($params);
+    if ($results) { // If address is found, return its ID
+        print_r($results);
+        return                          $results[0]["ID"];
+    } else { // If not, create the address
+        $stateID                    =   getStateID($dbLink, $params);
+        $cityID                     =   getCityID($dbLink, $params, $stateID);
+        $townID                     =   getTownID($dbLink, $params, $cityID);
+
+        $selectedParams             =   array(':address' => $params[':address'],
+            ':pinCode' => $params[':pinCode'],
+            ':stateID' => $stateID,
+            ':cityID' => $cityID,
+            ':townID' => $townID);
+
+        $queryString                =   "INSERT INTO address (address, pinCode, stateID, cityID, townID)
+            VALUES (:address, :pinCode, :stateID, :cityID, :townID)";
+        $statement                  =   $dbLink->prepare($queryString);
+        $statement->execute($selectedParams);
+        return                          $dbLink->lastInsertId();
     }
 
 }
 
 /**
- * find a regular parameter from the parameter array for the given key
- * Returns `null` if not found or is invalid
- * TODO: Throws exception, if invalid
+ * Gets the ID of the given state
  *
- * @param   Array                       array of GET parameters
- * @param   String                      Any key that holds a textual parameter value
+ * @param   Object                      PDO Object
+ * @param   Array                       Array of parameters, including address, city, state, town, pincode.
  *
- * @return  String                      datetime the value of the parameter as a string
+ * @return  String                      stateID for the given state
  */
-function findRegularParameterForKey($params, $keyParam) {
+function getStateID($dbLink, $params) {
 
-    // if null is passed, return null
-    if($params == null)
-        return                          null;
+    $selectedParams                 =   array(':name' => $params[':state']);
+    $queryString                    =   "SELECT ID
+        FROM state 
+        WHERE name = :name";
+    $statement                      =   $dbLink->prepare($queryString);
+    $statement->execute($selectedParams);
+    $results                        =   $statement->fetchAll(PDO::FETCH_ASSOC);
 
-    // if date param is not passed, return null
-    if(!array_key_exists($keyParam, $params))
-        return                          null;
+    return                              $results[0]["ID"];
 
-    $paramValue                     =   $params[$keyParam];
-
-    // if Param value is not mentioned, return null
-    if ($paramValue == null)
-        return                          null;
-
-    // if Param value is not string, return null
-    if (!is_string($paramValue))
-        return                          null;
-
-    return                              $paramValue;
 }
 
 /**
- * find the date parameter from the parameter array for the given key
- * Returns `null` if not found or is invalid
- * TODO: Throws exception, if invalid
+ * Gets the ID of the given city, If City doesn't exist,
+ * creates one and return its ID
  *
- * @param   Array                       array of GET parameters
- * @param   String                      either `fromDate` or `toDate`. Any key that holds date value
+ * @param   Object                      PDO Object
+ * @param   Array                       Array of parameters, including address, city, state, town, pincode.
+ * @param   String                      stateID of the given state
  *
- * @return  datetime                    datetime string in the format `Y-m-d H-i-s`
+ * @return  String                      cityID for the given city
  */
-function findDateParameterForKey($params, $keyParam) {
+function getCityID($dbLink, $params, $stateID) {
 
-    // if null is passed, return null
-    if($params == null)
-        return                          null;
+    $selectedParams                 =   array(':name' => $params[':city'], ':stateID' => $stateID);
+    $queryString                    =   "SELECT ID
+        FROM city 
+        WHERE name = :name AND stateID = :stateID";
+    $statement                      =   $dbLink->prepare($queryString);
+    $statement->execute($selectedParams);
+    $results                        =   $statement->fetchAll(PDO::FETCH_ASSOC);
 
-    // if date param is not passed, return null
-    if(!array_key_exists($keyParam, $params))
-        return                          null;
-
-    $dateParam                      =   $params[$keyParam];
-
-    // if date Param value is not mentioned, return null
-    if ($dateParam == null)
-        return                          null;
-
-    // Date validation: http://stackoverflow.com/questions/19271381/correctly-determine-if-date-string-is-a-valid-date-in-that-format
-    $d                              =   DateTime::createFromFormat('Y-m-d', $dateParam);
-    if ($d && $d->format('Y-m-d') == $dateParam) {
-        return $d->format('Y-m-d');
-    }
-
-    $d                              =   DateTime::createFromFormat('Y-m-d H:i:s', $dateParam);
-    if ($d && $d->format('Y-m-d H:i:s') == $dateParam) {
-        return $d->format('Y-m-d H:i:s');
-    } else {
-        return                          null;
+    if ($results) { // If city is found, return its ID
+        return                          $results[0]["ID"];
+    } else { // If not, create the city
+        $queryString                =   "INSERT INTO city (name, stateID)
+            VALUES (:name, :stateID)";
+        $statement                  =   $dbLink->prepare($queryString);
+        $statement->execute($selectedParams);
+        return                          $dbLink->lastInsertId();
     }
 }
 
 /**
- * finds the value of page parameter and returns it.
- * Returns 1, in case of invalid parameter or null
+ * Gets the ID of the given town, If Town doesn't exist,
+ * creates one and return its ID
  *
- * @param   $params                     array of GET parameters
+ * @param   Object                      PDO Object
+ * @param   Array                       Array of parameters, including address, city, state, town, pincode.
+ * @param   String                      cityID of the given City
  *
- * @return  int                         Page number
+ * @return  String                      townID for the given town
  */
-function findPageParameter($params) {
+function getTownID($dbLink, $params, $cityID) {
 
-    // if null is passed, return first page
-    if($params == null)
-        return                          1;
+    $selectedParams                 =   array(':name' => $params[':town'], ':cityID' => $cityID);
+    $queryString                    =   "SELECT ID
+        FROM town 
+        WHERE name = :name AND cityID = :cityID";
+    $statement                      =   $dbLink->prepare($queryString);
+    $statement->execute($selectedParams);
+    $results                        =   $statement->fetchAll(PDO::FETCH_ASSOC);
 
-    // if page param is not passed, return first page
-    if(!array_key_exists('page',$params))
-        return                          1;
-
-    $page                           =   $params['page'];
-
-    // if page value is not mentioned, return first page
-    if ($page == null)
-        return                          1;
-
-    if ( !is_numeric($page) )
-        return                          1;
-
-    return                              (int)$page;
-}
-
-function haltExecutionOnError($errorMessage) {
-    /*
-    mysql_close();
-    $errResponse                    =   array('status' => 'error', 'description' => $errorMessage);
-    $app->halt(500, json_encode($errResponse));
-     */
+    if ($results) { // If town is found, return its ID
+        return                          $results[0]["ID"];
+    } else { // If not, create the town
+        $queryString                =   "INSERT INTO town (name, cityID)
+            VALUES (:name, :cityID)";
+        $statement                  =   $dbLink->prepare($queryString);
+        $statement->execute($selectedParams);
+        return                          $dbLink->lastInsertId();
+    }
 }
 
 ?>

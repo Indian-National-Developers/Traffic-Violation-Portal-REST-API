@@ -33,7 +33,7 @@
  */
 
 require_once "common.php";
-//require_once "address.php";
+require_once "address.php";
 
 /**
  * GET Video Endpoint
@@ -91,15 +91,20 @@ $app->post('/video/', function () use ($app) {
 
     // retrieve JSON in Request body
     $newVidData                     =   (array)json_decode($app->request()->getBody());
-    //$newVidData[':addressID']       =   getAddressID($dbLink, $newVidData);
-    
+
+    // get the ID of the address
+    $newVidData[':addressID']       =   getAddressID($dbLink, $newVidData);
+
+    // get Credit ID
+    //$newVidData[':creditID']        =   getCreditID($dbLink, $newVidData);
+
     // adding current date time
-    $addedOn                        =   date('Y-m-d H:i:s');
-    $newVidData[':addedOn']         =   $addedOn;
+    $newVidData[':addedOn']         =   date('Y-m-d H:i:s');
+
 
     $query                          =   $dbLink->prepare("INSERT INTO Video
-        (videoURL, uploaderName, isAnonymous, latitude, longitude, shotOn, addedOn) 
-        VALUES (:videoURL, :uploaderName, :isAnonymous, :latitude, :longitude, :shotOn, :addedOn)");
+        (videoURL, uploaderName, isAnonymous, latitude, longitude, shotOn, addedOn, addressID) 
+        VALUES (:videoURL, :uploaderName, :isAnonymous, :latitude, :longitude, :shotOn, :addedOn, :addressID)");
 
     $result                         =   $query->execute($newVidData);
 
