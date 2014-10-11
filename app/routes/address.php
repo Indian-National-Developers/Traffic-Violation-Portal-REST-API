@@ -28,10 +28,10 @@
  *
  * @author          saiy2k <http://saiy2k.blogspot.in>
  * @link            https://github.com/GethuGames/Traffic-Violation-Portal-REST-API
+ * @link            https://docs.google.com/document/d/1kY9VICHEgSqUU9mO4VPDXmhxsSiM3iWRMX-dC3FhNqM/edit?usp=sharing
  *
  * TODO:
  * 1. This code may be prone to SQL Injection attacks. Have to study on this and secure it.
- * 2. Upgrade MySQL code to PDO / MySQLi code
  *
  */
 

@@ -12,7 +12,8 @@
  * (at your option) any later version.
  *
  * Traffic Violation Portal REST API is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -21,31 +22,22 @@
  * DESCRIPTION
  * ***********
  * This file sets up all routes for creating, retriving, updating, deleting
- * videos.
+ * Complaints.
  *
  * @author          saiy2k <http://saiy2k.blogspot.in>
  * @link            https://github.com/GethuGames/Traffic-Violation-Portal-REST-API
  *
- * TODO:
- * 1. This code may be prone to SQL Injection attacks. Have to study on this and secure it.
- * 2. Upgrade MySQL code to PDO / MySQLi code
- *
  */
 
 require_once "common.php";
-require_once "address.php";
 
 /**
- * GET Video Endpoint
- * Returns first 20 Videos in a page, sorted by recency, by default.
- * If any parameters are given, returns videos as per the request.
- *
- * TODO:
- * 1. Also need to retrieve the violations in each video and return
- *    them with the video data.
+ * GET Violation Endpoint
+ * Returns first 1000 Violations in a page, sorted by recency, by default.
+ * If any parameters are given, returns the Violations as per the request.
  *
  */
-$app->get('/video/', function () use ($app) {
+$app->get('/violation/', function () use ($app) {
     $config                         =   require 'app/config_dev.php';
     $dbConfig                       =   $config['db'];
 
@@ -78,9 +70,9 @@ $app->get('/video/', function () use ($app) {
 });
 
 /**
- * POST Video Endpoint
+ * POST Violation Endpoint
  */
-$app->post('/video/', function () use ($app) {
+$app->post('/violation/', function () use ($app) {
     $config                         =   require 'app/config_dev.php';
     $dbConfig                       =   $config['db'];
 
@@ -90,26 +82,26 @@ $app->post('/video/', function () use ($app) {
     }
 
     // retrieve JSON in Request body
-    $newVidData                     =   (array)json_decode($app->request()->getBody());
-
-    // get the ID of the address
-    $newVidData[':addressID']       =   getAddressID($dbLink, $newVidData);
+    $newViolationData               =   (array)json_decode($app->request()->getBody());
 
     // get Credit ID
-    //$newVidData[':creditID']        =   getCreditID($dbLink, $newVidData);
+    //$newViolationData[':creditID']  =   getCreditID($dbLink, $newVidData);
+
+    // get Fine Amount
+    //$newViolationData[':fineAmount']=   getFineAmount($dbLink, $newVidData);
 
     // adding current date time
-    $newVidData[':addedOn']         =   date('Y-m-d H:i:s');
+    $newViolationData[':addedOn']   =   date('Y-m-d H:i:s');
 
 
-    $query                          =   $dbLink->prepare("INSERT INTO video
-        (videoURL, uploaderName, isAnonymous, latitude, longitude, shotOn, addedOn, addressID) 
-        VALUES (:videoURL, :uploaderName, :isAnonymous, :latitude, :longitude, :shotOn, :addedOn, :addressID)");
+    $query                          =   $dbLink->prepare("INSERT INTO violation
+        (videoID, violationType, vehicleRegNo, vehicleType, timeSlice, analyzerName, addedOn, isAnonymous) 
+        VALUES (:videoID, :violationType, :vehicleRegNo, :vehicleType, :timeSlice, :analyzerName, :addedOn, :isAnonymous)");
 
-    $result                         =   $query->execute($newVidData);
+    $result                         =   $query->execute($newViolationData);
 
     if ($result) {
-        $responseData               =   array("result" => "success", "videoID" => $dbLink->lastInsertId());
+        $responseData               =   array("result" => "success", "violationID" => $dbLink->lastInsertId());
     } else {
         $responseData               =   array("result" => "fail", "message" => $dbLink->errorInfo());
     }
@@ -117,7 +109,6 @@ $app->post('/video/', function () use ($app) {
     echo json_encode($responseData);
 
 });
-
 
 /**
  * Forms a SQL query to select `video` records based on given parameters
@@ -135,7 +126,7 @@ $app->post('/video/', function () use ($app) {
  */
 function createSelectQuery($fromDateFilter, $toDateFilter, $townFilter, $cityFilter, $stateFilter, $userFilter, $page, $limit) {
 
-    $query                          =   "SELECT * FROM video ";
+    $query                          =   "SELECT * FROM violation ";
     if ($fromDateFilter || $toDateFilter || $townFilter || $cityFilter || $stateFilter || $userFilter) {
         $query                      =   $query . 'WHERE ';
         $conditionAdded             =   false;
@@ -184,19 +175,20 @@ function generatePagingData($dbLink, $page) {
         throw new Invalidargumentexception();
     }
 
-    $statement                      =   $dbLink->prepare("SELECT count(*) FROM video");
+    $statement                      =   $dbLink->prepare("SELECT count(*) FROM violation");
     $statement->execute();
     $num_rows                       =   $statement->fetchColumn();
 
-    $lastPageIndex                  =   ceil($num_rows / 20.0);
+    $lastPageIndex                  =   ceil($num_rows / 1000.0);
     $pagingJson                     =   array();
-    $pagingJson['first']            =   "/video/?page=1";
-    if ($page > 1) $pagingJson['prev']                  =   "/video/?page=" . ($page - 1);
-    if ($page < $lastPageIndex) $pagingJson['next']     =   "/video/?page=" . ($page + 1);
-    $pagingJson['last']             =   "/video/?page=" . $lastPageIndex;
+    $pagingJson['first']            =   "/violation/?page=1";
+    if ($page > 1) $pagingJson['prev']                  =   "/violation/?page=" . ($page - 1);
+    if ($page < $lastPageIndex) $pagingJson['next']     =   "/violation/?page=" . ($page + 1);
+    $pagingJson['last']             =   "/violation/?page=" . $lastPageIndex;
 
     return                              $pagingJson;
 
 }
+
 
 ?>
